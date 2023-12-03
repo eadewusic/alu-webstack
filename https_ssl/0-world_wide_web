@@ -15,22 +15,21 @@ query_dns() {
     local domain="$2"
 
     # Perform DNS query using dig and extract relevant information
-    dig_output=$(dig "${sub_domain}.${domain}" | grep -A1 'ANSWER SECTION:')
+    dig_output=$(dig "${sub_domain}.${domain}" | awk '/IN\s+A/{print $5}')
 
-    # Extract record type and destination IP from dig output
-    record_type=$(echo "${dig_output}" | awk '/IN\s+A/{print $4}')
-    destination=$(echo "${dig_output}" | awk '/IN\s+A/{print $5}')
-
-    # Display information using the display_info function
-    display_info "${sub_domain}" "${domain}" "${record_type}" "${destination}"
+    if [ -z "$dig_output" ]; then
+        echo "No record found for ${sub_domain}"
+    else
+        echo "The subdomain ${sub_domain} is a A record and points to ${dig_output}"
+    fi
 }
 
 # Main script
 if [ "$#" -eq 1 ]; then
     # When only the domain parameter is provided
-    domains=("www" "lb-01" "web-01" "web-02")
+    subdomains=("www" "lb-01" "web-01" "web-02")
 
-    for sub_domain in "${domains[@]}"; do
+    for sub_domain in "${subdomains[@]}"; do
         query_dns "${sub_domain}" "$1"
     done
 elif [ "$#" -eq 2 ]; then
