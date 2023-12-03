@@ -1,41 +1,37 @@
 #!/usr/bin/env bash
-# Function to display information about a subdomain
-display_info() {
-    local sub_domain="$1"
-    local domain="$2"
-    local record_type="$3"
-    local destination="$4"
-    
-    echo "The subdomain ${sub_domain} is a ${record_type} record and points to ${destination}"
-}
+# Function to perform DNS lookup and use awk for formatting
+perform_dns_lookup() {
+    local domain="$1"
+    local subdomain="$2"
 
-# Function to perform DNS query and extract information
-query_dns() {
-    local sub_domain="$1"
-    local domain="$2"
-
-    # Perform DNS query using dig and extract relevant information
-    dig_output=$(dig "${sub_domain}.${domain}" | awk '/IN\s+A/{print $5}')
-
-    if [ -z "$dig_output" ]; then
-        echo "No record found for ${sub_domain}"
-    else
-        echo "The subdomain ${sub_domain} is a A record and points to ${dig_output}"
-    fi
+    # Use dig to perform DNS lookup and format the output using awk
+    dig +short "$subdomain.$domain" | awk -v subdomain="$subdomain" \
+        '{if ($0 == "") print "No record found for " subdomain; else print "The subdomain " subdomain " is a A record and points to " $0}'
 }
 
 # Main script
-if [ "$#" -eq 1 ]; then
-    # When only the domain parameter is provided
+main() {
+    local domain="$1"
+    local subdomain="$2"
+
+    # Default subdomains order
     subdomains=("www" "lb-01" "web-01" "web-02")
 
-    for sub_domain in "${subdomains[@]}"; do
-        query_dns "${sub_domain}" "$1"
-    done
-elif [ "$#" -eq 2 ]; then
-    # When both domain and subdomain parameters are provided
-    query_dns "$2" "$1"
-else
+    if [ -z "$subdomain" ]; then
+        # If no specific subdomain provided, loop through default subdomains
+        for sub in "${subdomains[@]}"; do
+            perform_dns_lookup "$domain" "$sub"
+        done
+    else
+        # If a specific subdomain is provided, perform DNS lookup for that subdomain only
+        perform_dns_lookup "$domain" "$subdomain"
+    fi
+}
+
+# Check if required arguments are provided
+if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <domain> [subdomain]"
     exit 1
 fi
+
+main "$1" "$2"
