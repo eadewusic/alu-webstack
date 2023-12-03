@@ -18,8 +18,8 @@ query_dns() {
     dig_output=$(dig "${sub_domain}.${domain}" | grep -A1 'ANSWER SECTION:')
 
     # Extract record type and destination IP from dig output
-    record_type=$(echo "${dig_output}" | awk '/IN\s+[A-Z]+/{print $4}')
-    destination=$(echo "${dig_output}" | awk '/IN\s+[A-Z]+/{print $5}')
+    record_type=$(echo "${dig_output}" | awk '/IN\s+A/{print $4}')
+    destination=$(echo "${dig_output}" | awk '/IN\s+A/{print $5}')
 
     # Display information using the display_info function
     display_info "${sub_domain}" "${domain}" "${record_type}" "${destination}"
