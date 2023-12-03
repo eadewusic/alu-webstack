@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # Function to perform DNS lookup and use awk for formatting
 perform_dns_lookup() {
     local sub_domain="$1"
